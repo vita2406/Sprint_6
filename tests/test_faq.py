@@ -5,7 +5,7 @@ from pages.home_page import HomePage
 
 @allure.feature("Вопросы о важном")
 class TestFAQ:
-    @allure.title("Проверка ответа на вопрос")
+    @allure.title("Проверка ответа на вопрос №{question_index}")
     @pytest.mark.parametrize("question_index", range(8))
     def test_faq_answer_is_correct(self, driver, question_index):
         home_page = HomePage(driver)

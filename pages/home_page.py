@@ -1,6 +1,6 @@
+import allure
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
-import time
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -43,37 +43,68 @@ class HomePage(BasePage):
         7: "Да, обязательно. Всем самокатов! И Москве, и Московской области."
     }
 
+    @allure.step("Принять куки")
     def accept_cookies(self):
         try:
             self.click_element(self.COOKIE_ACCEPT_BUTTON)
         except:
             pass
 
+    @allure.step("Нажать верхнюю кнопку 'Заказать'")
     def click_order_button_top(self):
         buttons = self.wait.until(EC.presence_of_all_elements_located(self.ORDER_BUTTON))
         if buttons:
             buttons[0].click()
 
+    @allure.step("Нажать нижнюю кнопку 'Заказать'")
     def click_order_button_bottom(self):
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(1)
-        buttons = self.wait.until(EC.presence_of_all_elements_located(self.ORDER_BUTTON))
+        self.wait.until(lambda d: d.find_elements(*self.ORDER_BUTTON))
+        buttons = self.driver.find_elements(*self.ORDER_BUTTON)
         if len(buttons) > 1:
             buttons[-1].click()
 
+    @allure.step("Кликнуть на вопрос FAQ №{index}")
     def click_faq_question(self, index):
         locator = self.FAQ_QUESTIONS[index]
-        self.scroll_to_element(locator)
-        time.sleep(0.5)
-        self.click_element(locator)
+        # Прокручиваем к элементу
+        element = self.wait.until(EC.presence_of_element_located(locator))
+        self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
+        # Используем JavaScript для клика (обход перекрытия)
+        self.driver.execute_script("arguments[0].click();", element)
 
+    @allure.step("Получить текст ответа на вопрос №{index}")
     def get_faq_answer_text(self, index):
         locator = self.FAQ_ANSWERS[index]
-        self.wait.until(lambda d: d.find_element(*locator).is_displayed())
+        self.wait.until(EC.visibility_of_element_located(locator))
         return self.get_text(locator)
 
+    @allure.step("Кликнуть на логотип 'Самокат'")
     def click_samokat_logo(self):
         self.click_element(self.SAMOKAT_LOGO)
 
+    @allure.step("Кликнуть на логотип 'Яндекс'")
     def click_yandex_logo(self):
         self.click_element(self.YANDEX_LOGO)
+
+    @allure.step("Получить текущий URL страницы")
+    def get_current_url(self):
+        return self.driver.current_url
+
+    @allure.step("Получить текущее окно")
+    def get_current_window_handle(self):
+        return self.driver.current_window_handle
+
+    @allure.step("Получить все окна")
+    def get_window_handles(self):
+        return self.driver.window_handles
+
+    @allure.step("Переключиться на окно по индексу")
+    def switch_to_window(self, index):
+        windows = self.get_window_handles()
+        if len(windows) > index:
+            self.driver.switch_to.window(windows[index])
+
+    @allure.step("Закрыть текущее окно")
+    def close_current_window(self):
+        self.driver.close()

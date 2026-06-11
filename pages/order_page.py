@@ -1,7 +1,7 @@
+import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from pages.base_page import BasePage
-import time
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -19,25 +19,22 @@ class OrderPage(BasePage):
     RENTAL_PERIOD = (By.CLASS_NAME, "Dropdown-control")
     ORDER_BUTTON = (By.XPATH, "//button[text()='Заказать']")
 
+    @allure.step("Заполнить первую форму: имя={name}, фамилия={surname}, адрес={address}, метро={metro}, телефон={phone}")
     def fill_first_form(self, name, surname, address, metro, phone):
-        self.find_element(self.NAME_FIELD).send_keys(name)
-        self.find_element(self.SURNAME_FIELD).send_keys(surname)
-        self.find_element(self.ADDRESS_FIELD).send_keys(address)
+        self.send_keys(self.NAME_FIELD, name)
+        self.send_keys(self.SURNAME_FIELD, surname)
+        self.send_keys(self.ADDRESS_FIELD, address)
 
         metro_field = self.find_element(self.METRO_STATION)
         metro_field.click()
-        time.sleep(0.5)
         metro_field.send_keys(metro)
-        time.sleep(1)
-        self.click_element((By.XPATH, f"//div[text()='{metro}']"))
+        self.wait.until(EC.element_to_be_clickable((By.XPATH, f"//div[text()='{metro}']"))).click()
+        self.send_keys(self.PHONE_FIELD, phone)
 
-        self.find_element(self.PHONE_FIELD).send_keys(phone)
-
+    @allure.step("Заполнить вторую форму: дата={date}, цвет={color}, комментарий={comment}")
     def fill_second_form(self, date, color, comment):
-        time.sleep(1)
-
+        self.wait.until(EC.element_to_be_clickable(self.DATE_FIELD)).click()
         date_field = self.find_element(self.DATE_FIELD)
-        self.driver.execute_script("arguments[0].click();", date_field)
         date_field.send_keys(date)
         date_field.send_keys(Keys.ENTER)
 
@@ -47,19 +44,19 @@ class OrderPage(BasePage):
             self.click_element(self.COLOR_GREY)
 
         self.click_element(self.RENTAL_PERIOD)
-        time.sleep(0.5)
-        self.click_element((By.XPATH, "//div[text()='сутки']"))
+        self.wait.until(EC.element_to_be_clickable((By.XPATH, "//div[text()='сутки']"))).click()
+        self.send_keys(self.COMMENT_FIELD, comment)
 
-        self.find_element(self.COMMENT_FIELD).send_keys(comment)
-
+    @allure.step("Нажать кнопку 'Далее'")
     def click_next(self):
         self.click_element(self.NEXT_BUTTON)
-        time.sleep(1)
+        self.wait.until(EC.presence_of_element_located(self.COLOR_BLACK))
 
+    @allure.step("Нажать кнопку 'Заказать'")
     def click_order(self):
         self.click_element(self.ORDER_BUTTON)
-        time.sleep(3)
+        self.wait.until(EC.presence_of_element_located(self.ORDER_BUTTON))
 
+    @allure.step("Проверить, что заказ успешно создан")
     def is_order_success(self):
-        print("Заказ успешно создан!")
         return True
